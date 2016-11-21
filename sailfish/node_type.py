@@ -476,7 +476,7 @@ class DynamicValue(object):
         depends on at least one of the symbols provided as arguments."""
         for symbol in args:
             for param in self.params:
-                if isinstance(param, expr.Expr) and symbol in param.free_symbols:
+                if isinstance(param, expr.Expr) and param.has(symbol):
                     return True
         return False
 
