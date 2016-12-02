@@ -207,7 +207,7 @@ def linpoints(i, min_=1., max_=.1, n=10):
 def setup_logger(config):
     logger = logging.getLogger('saifish')
     formatter = logging.Formatter("[%(relativeCreated)6d %(levelname)5s %(processName)s] %(message)s")
- 
+
     logger.setLevel(config.loglevel)
 
     if config.verbose:
