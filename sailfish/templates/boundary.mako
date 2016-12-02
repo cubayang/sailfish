@@ -616,7 +616,7 @@ ${device_func} inline void postcollisionBoundaryConditions(
   %endif
 </%def>
 
-${device_func} inline void precollisionBoundaryConditions(Dist *fi, int ncode,
+${device_func} void precollisionBoundaryConditions(Dist *fi, int ncode,
     int node_type, int orientation, float *rho, float *v0
     ${', ' + global_ptr + 'float *dist_out, unsigned int gi' + (', %s const int *nodes, int dense_gi' % global_ptr if node_addressing == 'indirect'  else '') if access_pattern == 'AA' and nt.NTDoNothing in node_types else ''}
     ${iteration_number_if_required()})
