@@ -25,7 +25,7 @@
 </%def>
 
 // Calculates the Shan-Chan pseudopotential.
-${device_func} inline float sc_ppot(${global_ptr} ${const_ptr} float *__restrict__ field, unsigned int gi)
+${device_func}  float sc_ppot(${global_ptr} ${const_ptr} float *__restrict__ field, unsigned int gi)
 {
   float lfield = field[gi];
   return ${cex(sym.SHAN_CHEN_POTENTIALS[sc_potential]('lfield'))};
@@ -42,7 +42,7 @@ ${device_func} inline float sc_ppot(${global_ptr} ${const_ptr} float *__restrict
 // cc: coupling constant
 // out: Shan-Chen force (output variable)
 // x, y, [z]: position of the node
-${device_func} inline void shan_chen_force(int i, float rho, ${global_ptr} ${const_ptr} float *__restrict__ field,
+${device_func}  void shan_chen_force(int i, float rho, ${global_ptr} ${const_ptr} float *__restrict__ field,
 float cc, float *out, ${position_decl(prefix='')})
 {
   float psi;

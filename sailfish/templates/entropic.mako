@@ -6,7 +6,7 @@
 <%namespace file="mako_utils.mako" import="*"/>
 
 // See PRL 97, 010201 (2006), Eq. 12 for form of coefficients.
-${device_func} inline void ComputeACoeff(Dist* fi, Dist* fneq, float *a1,
+${device_func}  void ComputeACoeff(Dist* fi, Dist* fneq, float *a1,
     float *a2, float *a3, float *a4) {
   *a1 = 0.0f;
   *a2 = 0.0f;
@@ -38,7 +38,7 @@ ${device_func} inline void ComputeACoeff(Dist* fi, Dist* fneq, float *a1,
 // of the entropy equality H(f) = H(f^alpha) in powers of fneq / f, where
 // f^alpha is the entropic mirror state f + alpha * fneq.
 // fneq = feq - fi
-${device_func} inline float EstimateAlphaSeries(Dist* fi, Dist* fneq) {
+${device_func}  float EstimateAlphaSeries(Dist* fi, Dist* fneq) {
   float a1, a2, a3, a4;
   ComputeACoeff(fi, fneq, &a1, &a2, &a3, &a4);
   return ${cex(sym.alpha_series())};
@@ -46,7 +46,7 @@ ${device_func} inline float EstimateAlphaSeries(Dist* fi, Dist* fneq) {
 
 // TODO(mjanusz): The entropy calculation should use a sympy expression.
 // Calculates the entropy in the ELBM model.
-${device_func} inline float CalculateEntropy(Dist* fi) {
+${device_func}  float CalculateEntropy(Dist* fi) {
   float ent = 0.0f;
 
   %for w, name in zip(grid.entropic_weights, grid.idx_name):
@@ -58,7 +58,7 @@ ${device_func} inline float CalculateEntropy(Dist* fi) {
 
 // Calculates entropy for the mirror state with a given alpha (f^alpha = f + alpha * fneq)
 // Also calculates d \Delta entropy / d alpha and returns it in 'derivative'.
-${device_func} inline float CalculateEntropyIneq(Dist* fi, Dist* fneq, float alpha, float *derivative) {
+${device_func}  float CalculateEntropyIneq(Dist* fi, Dist* fneq, float alpha, float *derivative) {
   float ent = 0.0f;
   float dent = 0.0f;
   float t, h;
@@ -75,7 +75,7 @@ ${device_func} inline float CalculateEntropyIneq(Dist* fi, Dist* fneq, float alp
 }
 
 // Returns the maximum value of alpha for which all components of f_alpha are positive.
-${device_func} inline float FindMaxAlpha(Dist* fi, Dist *fneq) {
+${device_func}  float FindMaxAlpha(Dist* fi, Dist *fneq) {
   float max_alpha = 1000.0f;
 
   %for name in grid.idx_name:
@@ -87,7 +87,7 @@ ${device_func} inline float FindMaxAlpha(Dist* fi, Dist *fneq) {
   return max_alpha;
 }
 
-${device_func} inline float EstimateAlphaFromEntropy(Dist* fi, Dist* fneq, float alpha) {
+${device_func}  float EstimateAlphaFromEntropy(Dist* fi, Dist* fneq, float alpha) {
   float ent = CalculateEntropy(fi);
   int i = 0;
   float init_alpha = alpha;
@@ -144,7 +144,7 @@ ${device_func} inline float EstimateAlphaFromEntropy(Dist* fi, Dist* fneq, float
 
 // Returns true if the deviation of distribution from the equilibrium is small
 // enough so that the asymptotic alpha expansion can be applied (see EstimateAlphaSeries).
-${device_func} inline float SmallEquilibriumDeviation(Dist* fi, Dist* fneq) {
+${device_func}  float SmallEquilibriumDeviation(Dist* fi, Dist* fneq) {
   float deviation = 0.0f;
   float t;
 
@@ -158,7 +158,7 @@ ${device_func} inline float SmallEquilibriumDeviation(Dist* fi, Dist* fneq) {
   return deviation;
 }
 
-${device_func} inline float EntropicRelaxationParam(Dist* fi, Dist* fneq
+${device_func}  float EntropicRelaxationParam(Dist* fi, Dist* fneq
     ${cond(alpha_output, ', ' + global_ptr + ' float* alpha_out')}) {
   const float dev = SmallEquilibriumDeviation(fi, fneq);
   float alpha;

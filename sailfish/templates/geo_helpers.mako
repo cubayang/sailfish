@@ -21,13 +21,13 @@ typedef struct DistM {
 
 // Functions for checking whether a node is of a given specific type.
 %for nt_class in node_types:
-  ${device_func} inline bool is${nt_class.__name__}(unsigned int type) {
+  ${device_func}  bool is${nt_class.__name__}(unsigned int type) {
     return type == ${type_id_remap[nt_class.id]};
   }
 %endfor
 
 %if (nt.NTEquilibriumVelocity in node_types) or (nt.NTEquilibriumDensity in node_types):
-${device_func} inline bool is_NTEquilibriumNode(unsigned int type) {
+${device_func}  bool is_NTEquilibriumNode(unsigned int type) {
   return (false
   %if nt.NTEquilibriumVelocity in node_types:
     || isNTEquilibriumVelocity(type)
@@ -41,7 +41,7 @@ ${device_func} inline bool is_NTEquilibriumNode(unsigned int type) {
 
 // Returns true is the node does not require any special processing
 // to calculate macroscopic fields.
-${device_func} inline bool NTUsesStandardMacro(unsigned int type) {
+${device_func}  bool NTUsesStandardMacro(unsigned int type) {
   return (false
     %for nt_class in node_types:
       %if nt_class.standard_macro:
@@ -52,7 +52,7 @@ ${device_func} inline bool NTUsesStandardMacro(unsigned int type) {
 }
 
 // Wet nodes are nodes that undergo a standard collision procedure.
-${device_func} inline bool isWetNode(unsigned int type) {
+${device_func}  bool isWetNode(unsigned int type) {
   return (false
     %for nt_class in node_types:
       %if nt_class.wet_node:
@@ -63,7 +63,7 @@ ${device_func} inline bool isWetNode(unsigned int type) {
 }
 
 // Wet nodes are nodes that undergo a standard collision procedure.
-${device_func} inline bool isExcludedNode(unsigned int type) {
+${device_func}  bool isExcludedNode(unsigned int type) {
   return (false
     %for nt_class in node_types:
       %if nt_class.excluded:
@@ -73,7 +73,7 @@ ${device_func} inline bool isExcludedNode(unsigned int type) {
   );
 }
 
-${device_func} inline bool isPropagationOnly(unsigned int type) {
+${device_func}  bool isPropagationOnly(unsigned int type) {
   return (false
     %for nt_class in node_types:
       %if nt_class.propagation_only:
@@ -84,7 +84,7 @@ ${device_func} inline bool isPropagationOnly(unsigned int type) {
 }
 
 // Internal helper, do not use directly.
-${device_func} inline void _storeNodeScratchSpace(unsigned int scratch_id,
+${device_func}  void _storeNodeScratchSpace(unsigned int scratch_id,
   unsigned int num_values, float *buffer, ${global_ptr} float *g_buffer) {
   for (int i = 0; i < num_values; i++) {
     g_buffer[i + scratch_id * num_values] = buffer[i];
@@ -93,7 +93,7 @@ ${device_func} inline void _storeNodeScratchSpace(unsigned int scratch_id,
 }
 
 // Internal helper, do not use directly.
-${device_func} inline void _loadNodeScratchSpace(unsigned int scratch_id,
+${device_func}  void _loadNodeScratchSpace(unsigned int scratch_id,
   unsigned int num_values, ${global_ptr} float *g_buffer, float *buffer) {
   for (int i = 0; i < num_values; i++) {
     buffer[i] = g_buffer[i + scratch_id * num_values];
@@ -107,7 +107,7 @@ ${device_func} inline void _loadNodeScratchSpace(unsigned int scratch_id,
 // g_buffer: pointer to a buffer in the global memory used for scratch
 //       space
 // buffer: pointer to a local buffer where the values will be saved
-${device_func} inline void loadNodeScratchSpace(unsigned int scratch_id,
+${device_func}  void loadNodeScratchSpace(unsigned int scratch_id,
    unsigned int type, ${global_ptr} float *g_buffer, float* buffer)
 {
   switch (type) {
@@ -127,7 +127,7 @@ ${device_func} inline void loadNodeScratchSpace(unsigned int scratch_id,
 // Stores values from a local buffer into the node scratch space in global memory.
 //
 // Arguments: see loadNodeScratchSpace
-${device_func} inline void storeNodeScratchSpace(unsigned int scratch_id,
+${device_func}  void storeNodeScratchSpace(unsigned int scratch_id,
   unsigned int type, float* buffer, ${global_ptr} float* g_buffer)
 {
   switch (type) {
@@ -143,38 +143,38 @@ ${device_func} inline void storeNodeScratchSpace(unsigned int scratch_id,
   }
 }
 
-${device_func} inline unsigned int decodeNodeType(unsigned int nodetype) {
+${device_func}  unsigned int decodeNodeType(unsigned int nodetype) {
   return nodetype & ${nt_type_mask};
 }
 
-${device_func} inline unsigned int decodeNodeOrientation(unsigned int nodetype) {
+${device_func}  unsigned int decodeNodeOrientation(unsigned int nodetype) {
   return nodetype >> ${nt_misc_shift + nt_param_shift + nt_scratch_shift};
 }
 
 // Returns the node's scratch ID, to be passed to (load,store)NodeScratchSpace as scratch_id.
-${device_func} inline unsigned int decodeNodeScratchId(unsigned int nodetype) {
+${device_func}  unsigned int decodeNodeScratchId(unsigned int nodetype) {
   return (nodetype >> ${nt_misc_shift + nt_param_shift}) & ${(1 << nt_scratch_shift)-1};
 }
 
-${device_func} inline unsigned int decodeNodeParamIdx(unsigned int nodetype) {
+${device_func}  unsigned int decodeNodeParamIdx(unsigned int nodetype) {
   return (nodetype >> ${nt_misc_shift}) & ${(1 << nt_param_shift)-1};
 }
 
 %if dim == 2:
-  ${device_func} inline unsigned int getGlobalIdx(int gx, int gy) {
+  ${device_func}  unsigned int getGlobalIdx(int gx, int gy) {
     return gx + ${arr_nx} * gy;
   }
 
-  ${device_func} inline void decodeGlobalIdx(unsigned int gi, int *gx, int *gy) {
+  ${device_func}  void decodeGlobalIdx(unsigned int gi, int *gx, int *gy) {
     *gx = gi % ${arr_nx};
     *gy = gi / ${arr_nx};
   }
 %else:
-  ${device_func} inline unsigned int getGlobalIdx(int gx, int gy, int gz) {
+  ${device_func}  unsigned int getGlobalIdx(int gx, int gy, int gz) {
     return gx + ${arr_nx} * gy + ${arr_nx * arr_ny} * gz;
   }
 
-  ${device_func} inline void decodeGlobalIdx(unsigned int gi, int *gx, int *gy, int *gz) {
+  ${device_func}  void decodeGlobalIdx(unsigned int gi, int *gx, int *gy, int *gz) {
     *gz = gi / ${arr_nx * arr_ny};
     int t = gi % ${arr_nx * arr_ny};
     *gy = t / ${arr_nx};
@@ -255,7 +255,7 @@ ${device_func} void checkInvalidValues(Dist* d, ${position_decl()}) {
   %endfor
 </%def>
 
-${device_func} inline void getDist(
+${device_func}  void getDist(
     ${nodes_array_if_required()}
     Dist *dout, ${global_ptr} ${const_ptr} float *__restrict__ din, unsigned int gi
     ${dense_gi_if_required()}

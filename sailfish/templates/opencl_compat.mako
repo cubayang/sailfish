@@ -1,7 +1,7 @@
 % if backend == 'cuda':
 
 // OpenCL compatibility code.
-__device__ int inline get_local_size(int i)
+__device__ int  get_local_size(int i)
 {
   if (i == 0) {
     return blockDim.x;
@@ -10,7 +10,7 @@ __device__ int inline get_local_size(int i)
   }
 }
 
-__device__ int inline get_global_size(int i)
+__device__ int  get_global_size(int i)
 {
   if (i == 0) {
     return blockDim.x * gridDim.x;
@@ -19,7 +19,7 @@ __device__ int inline get_global_size(int i)
   }
 }
 
-__device__ int inline get_group_id(int i)
+__device__ int  get_group_id(int i)
 {
   if (i == 0) {
     return blockIdx.x;
@@ -28,7 +28,7 @@ __device__ int inline get_group_id(int i)
   }
 }
 
-__device__ int inline get_local_id(int i)
+__device__ int  get_local_id(int i)
 {
   if (i == 0) {
     return threadIdx.x;
@@ -37,7 +37,7 @@ __device__ int inline get_local_id(int i)
   }
 }
 
-__device__ int inline get_global_id(int i)
+__device__ int  get_global_id(int i)
 {
   if (i == 0) {
     return threadIdx.x + blockIdx.x * blockDim.x;

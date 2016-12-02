@@ -34,7 +34,7 @@ __device__ float bc_timeseries[] = {
 };
 
 // Returns a linearly interpolated value between (0, d0) and (1, d1) at pos \in (0, 1)
-${device_func} inline float interpolate_linear(const float d0, const float d1, const float pos) {
+${device_func}  float interpolate_linear(const float d0, const float d1, const float pos) {
   return pos * d1 + d0 * (1.0f - pos);
 }
 
@@ -43,7 +43,7 @@ ${device_func} inline float interpolate_linear(const float d0, const float d1, c
 //  size - size of the current timeseries
 //  step - number LB iterations corresponding to two neighboring data points
 //  iteration - current LB iteration number
-${device_func} inline float timeseries_interpolate(
+${device_func}  float timeseries_interpolate(
     const unsigned int offset,
     const unsigned int size,
     const float step,
@@ -62,14 +62,14 @@ ${device_func} inline float timeseries_interpolate(
 
 %if time_dependence:
 // Returns the physical time corresponding to the given LB iteration.
-${device_func} inline float get_time_from_iteration(unsigned int iteration) {
+${device_func}  float get_time_from_iteration(unsigned int iteration) {
   return iteration * ${cex(dt_per_lattice_time_unit)};
 }
 %endif  ## time_dependence
 
 ## Renders functions to compute dynamic values.
 %for i, expressions in symbol_idx_map.items():
-  ${device_func} inline void time_dep_param_${i}(float *out ${dynamic_val_args_decl()}) {
+  ${device_func}  void time_dep_param_${i}(float *out ${dynamic_val_args_decl()}) {
     %if time_dependence:
       float phys_time = get_time_from_iteration(iteration_number);
     %endif
@@ -80,7 +80,7 @@ ${device_func} inline float get_time_from_iteration(unsigned int iteration) {
 %endfor
 
 // Returns a node parameter which is a vector (in 'out').
-${device_func} inline void node_param_get_vector(const int idx, float *out
+${device_func}  void node_param_get_vector(const int idx, float *out
     ${dynamic_val_args_decl()}) {
   %if (time_dependence or space_dependence) and symbol_idx_map:
     if (idx >= ${non_symbolic_idxs}) {
@@ -108,7 +108,7 @@ ${device_func} inline void node_param_get_vector(const int idx, float *out
 }
 
 // Returns a node parameter which is a scalar.
-${device_func} inline float node_param_get_scalar(const int idx ${dynamic_val_args_decl()}) {
+${device_func}  float node_param_get_scalar(const int idx ${dynamic_val_args_decl()}) {
   %if (time_dependence or space_dependence) and symbol_idx_map:
     if (idx >= ${non_symbolic_idxs}) {
       switch (idx) {
@@ -187,7 +187,7 @@ ${device_func} inline float node_param_get_scalar(const int idx ${dynamic_val_ar
   %endif
 </%def>
 
-${device_func} inline void bounce_back(Dist *fi)
+${device_func}  void bounce_back(Dist *fi)
 {
   float t;
 
@@ -199,13 +199,13 @@ ${device_func} inline void bounce_back(Dist *fi)
 }
 
 // Compute the 0th moment of the distributions, i.e. density.
-${device_func} inline void compute_0th_moment(Dist *fi, float *out)
+${device_func}  void compute_0th_moment(Dist *fi, float *out)
 {
   *out = ${sym.ex_rho(grid, 'fi', incompressible, minimize_roundoff=config.minimize_roundoff)};
 }
 
 // Compute the 1st moments of the distributions, i.e. momentum.
-${device_func} inline void compute_1st_moment(Dist *fi, float *out, int add, float factor)
+${device_func}  void compute_1st_moment(Dist *fi, float *out, int add, float factor)
 {
   if (add) {
     %for d in range(0, grid.dim):
@@ -221,7 +221,7 @@ ${device_func} inline void compute_1st_moment(Dist *fi, float *out, int add, flo
 // Compute the 2nd moments of the distributions.  Order of components is:
 // 2D: xx, xy, yy
 // 3D: xx, xy, xz, yy, yz, zz
-${device_func} inline void compute_2nd_moment(Dist *fi, float *out)
+${device_func}  void compute_2nd_moment(Dist *fi, float *out)
 {
   %for i, (a, b) in enumerate([(x,y) for x in range(0, dim) for y in range(x, dim)]):
     out[${i}] = ${cex(sym.ex_flux(grid, 'fi', a, b, config), pointers=True)};
@@ -230,7 +230,7 @@ ${device_func} inline void compute_2nd_moment(Dist *fi, float *out)
 
 // Computes the 2nd moment of the non-equilibrium distribution function
 // given the full distribution fuction 'fi'.
-${device_func} inline void compute_noneq_2nd_moment(Dist* fi, const float rho, float *v0, float *out)
+${device_func}  void compute_noneq_2nd_moment(Dist* fi, const float rho, float *v0, float *out)
 {
   %for i, (a, b) in enumerate([(x,y) for x in range(0, dim) for y in range(x, dim)]):
     out[${i}] = ${cex(sym.ex_flux(grid, 'fi', a, b, config), pointers=True)} -
@@ -240,14 +240,14 @@ ${device_func} inline void compute_noneq_2nd_moment(Dist* fi, const float rho, f
 
 // Compute the 1st moments of the distributions and divide it by the 0-th moment
 // i.e. compute velocity.
-${device_func} inline void compute_1st_div_0th(Dist *fi, float *out, float zero)
+${device_func}  void compute_1st_div_0th(Dist *fi, float *out, float zero)
 {
   %for d in range(0, grid.dim):
     out[${d}] = ${cex(sym.ex_velocity(grid, 'fi', d, config), pointers=True, rho='zero')};
   %endfor
 }
 
-${device_func} inline void compute_macro_quant(Dist *fi, float *rho, float *v)
+${device_func}  void compute_macro_quant(Dist *fi, float *rho, float *v)
 {
   compute_0th_moment(fi, rho);
   compute_1st_div_0th(fi, v, *rho);
@@ -318,7 +318,7 @@ ${device_func} void zouhe_bb(Dist *fi, int orientation, float *rho, float *v0)
 
 ## TODO integrate it via mako with the function below
 
-${device_func} inline void get0thMoment(Dist *fi, int node_type, int orientation, float *out)
+${device_func}  void get0thMoment(Dist *fi, int node_type, int orientation, float *out)
 {
   compute_0th_moment(fi, out);
 }
@@ -397,7 +397,7 @@ ${device_func} inline void get0thMoment(Dist *fi, int node_type, int orientation
 // Get macroscopic density rho and velocity v given a distribution fi, and
 // the node class node_type.
 //
-${device_func} inline void getMacro(
+${device_func}  void getMacro(
     Dist *fi, int ncode, int node_type, int orientation, float *rho,
     float *v0 ${dynamic_val_args_decl()})
 {
@@ -443,7 +443,7 @@ ${device_func} inline void getMacro(
 
 // Uses extrapolation/other schemes to compute missing distributions for some implementations
 // of boundary condtitions.
-${device_func} inline void fixMissingDistributions(
+${device_func}  void fixMissingDistributions(
     Dist *fi, ${global_ptr} float *dist_in, int ncode, int node_type, int orientation, unsigned int gi,
     ${kernel_args_1st_moment('iv')}
     ${global_ptr} float *gg0m0
@@ -550,7 +550,7 @@ ${device_func} inline void fixMissingDistributions(
 
 // TODO: Check whether it is more efficient to actually recompute
 // node_type and orientation instead of passing them as variables.
-${device_func} inline void postcollisionBoundaryConditions(
+${device_func}  void postcollisionBoundaryConditions(
     Dist *fi, int ncode, int node_type, int orientation,
     float *rho, float *v0, unsigned int gi, ${global_ptr} float *dist_out
     ${iteration_number_if_required()}

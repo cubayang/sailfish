@@ -14,7 +14,7 @@ ${mrt.body()}
 
 %if model == 'mrt' and simtype == 'free-energy':
 %for grid_idx in range(0, len(grids)):
-${device_func} inline void FE_MRT_relaxate${grid_idx}(${bgk_args_decl(grid_idx)}, Dist *d0,
+${device_func}  void FE_MRT_relaxate${grid_idx}(${bgk_args_decl(grid_idx)}, Dist *d0,
   int node_type
   ${dynamic_val_args_decl()})
 {
@@ -56,7 +56,7 @@ ${device_func} inline void FE_MRT_relaxate${grid_idx}(${bgk_args_decl(grid_idx)}
 %if model == 'elbm':
 <%include file="entropic.mako"/>
 
-${device_func} inline void ELBM_relaxate(${bgk_args_decl()}, Dist* d0
+${device_func}  void ELBM_relaxate(${bgk_args_decl()}, Dist* d0
   ${dynamic_val_args_decl()}
 %if alpha_output:
   , ${global_ptr} float* alpha_out
@@ -101,7 +101,7 @@ ${device_func} inline void ELBM_relaxate(${bgk_args_decl()}, Dist* d0
 // Performs the relaxation step in the BGK model given the density rho,
 // the velocity v and the distribution fi.
 %for grid_idx in range(len(grids)):
-${device_func} inline void BGK_relaxate${grid_idx}(${bgk_args_decl(grid_idx)},
+${device_func}  void BGK_relaxate${grid_idx}(${bgk_args_decl(grid_idx)},
   Dist *d0, int node_type, int ncode
   ${dynamic_val_args_decl()}
   ${force_field_if_required()}
