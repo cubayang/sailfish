@@ -225,6 +225,7 @@ class VTKOutput(LBOutput):
         self.mask_nonfluid_nodes()
         os.environ['ETS_TOOLKIT'] = 'null'
         from tvtk.api import tvtk
+        from tvtk.common import configure_input
         idata = tvtk.ImageData(spacing=(1, 1, 1), origin=(0, 0, 0))
 
         first = True
@@ -239,7 +240,7 @@ class VTKOutput(LBOutput):
                 t = idata.point_data.add_array(field.flatten())
                 idata.point_data.get_array(t).name = name
 
-        idata.update()
+        idata.update_traits()
         dim = len(sample_field.shape)
 
         for name, field in self._vector_fields.items():
@@ -258,7 +259,8 @@ class VTKOutput(LBOutput):
             idata.dimensions = list(reversed(sample_field.shape)) + [1]
 
         fname = filename(self.basename, self.digits, self.subdomain_id, i, suffix='.vti')
-        w = tvtk.XMLImageDataWriter(input=idata, file_name=fname)
+        w = tvtk.XMLImageDataWriter(file_name=fname)
+        configure_input(w, idata)
         w.write()
 
     # TODO: Implement this function.
