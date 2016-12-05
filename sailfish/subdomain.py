@@ -467,9 +467,9 @@ class Subdomain(object):
 
         # Mark nodes connected to at least one active node as active.
         # We need these nodes for walls and ghost nodes.
-        where = (filters.convolve(fluid_map.astype(np.uint8), neighbors,
+        mask = (filters.convolve(fluid_map.astype(np.uint8), neighbors,
                                   mode='wrap') > 0)
-        fluid_map[where] = True
+        fluid_map[mask] = True
         self.active_node_mask = fluid_map
 
     @property
@@ -486,7 +486,7 @@ class Subdomain(object):
         else:
             return np.sum(self.fluid_map())
 
-    def _verify_params(self, where, node_type):
+    def _verify_params(self, mask, node_type):
         """Verifies that the node parameters are set correctly."""
 
         for name, param in node_type.params.items():
@@ -502,7 +502,7 @@ class Subdomain(object):
             # needs to be a numpy record array.  Use node_util.multifield()
             # to create this array easily.
             elif isinstance(param, np.ndarray):
-                assert param.size == np.sum(where), ("Your array needs to "
+                assert param.size == np.sum(mask), ("Your array needs to "
                         "have exactly as many nodes as there are True values "
                         "in the 'where' array.  Use node_util.multifield() to "
                         "generate the array in an easy way.")
@@ -526,13 +526,13 @@ class Subdomain(object):
                 params.append((k, v))
         return frozenset(params)
 
-    def set_node(self, where, node_type):
+    def set_node(self, mask, node_type):
         """Set a boundary condition at selected node(s).
 
-        :param where: index expression selecting nodes to set
+        :param mask: index expression selecting nodes to set
         :param node_type: LBNodeType subclass or instance
         """
-        where = np.where(where)
+        mask = np.where(mask)
         assert not self._type_map_encoded
         if inspect.isclass(node_type):
             assert issubclass(node_type, nt.LBNodeType)
@@ -540,21 +540,21 @@ class Subdomain(object):
         else:
             assert isinstance(node_type, nt.LBNodeType)
 
-        self._verify_params(where, node_type)
-        self._type_map_base[where] = node_type.id
+        self._verify_params(mask, node_type)
+        self._type_map_base[mask] = node_type.id
         key = hash((node_type.id, self._hashable_params(node_type.params)))
-        assert np.all(self._param_map_base[where] == 0),\
+        assert np.all(self._param_map_base[mask] == 0),\
                 "Overriding previously set nodes is not allowed."
-        self._param_map_base[where] = key
+        self._param_map_base[mask] = key
         self._params[key] = node_type
         self._seen_types.add(node_type.id)
 
         if hasattr(node_type, 'orientation') and node_type.orientation is not None:
-            self._orientation_base[where] = node_type.orientation
+            self._orientation_base[mask] = node_type.orientation
         elif node_type.needs_orientation:
             self._needs_orientation = True
 
-    def update_node(self, where, node_type):
+    def update_node(self, mask, node_type):
         """Updates a boundary condition at selected node(s).
 
         Use this method only to update nodes in a _running_ simulation.
@@ -581,8 +581,8 @@ class Subdomain(object):
                                             or node_type.orientation is None):
             raise ValueError('Node orientation not specified.')
 
-        self._type_vis_map[where] = node_type.id
-        self._type_map[where] = self._encoder._subdomain_encode_node(
+        self._type_vis_map[mask] = node_type.id
+        self._type_map[mask] = self._encoder._subdomain_encode_node(
             getattr(node_type, 'orientation', 0),
             node_type.id, key)
 
@@ -850,19 +850,19 @@ class Subdomain(object):
         #  W W
         #  W V
         # where W is a HBB wall and V is a velocity BC.
-        where = (filters.convolve(fluid_map, neighbors, mode='constant', cval=1) == 0)
-        self._type_map_base[where & wet_map_for_unused.astype(np.bool)] = nt._NTUnused.id
+        mask = (filters.convolve(fluid_map, neighbors, mode='constant', cval=1) == 0)
+        self._type_map_base[mask & wet_map_for_unused.astype(np.bool)] = nt._NTUnused.id
 
         # Any dry node, not connected to at least one wet node is marked unused.
         # For instance, for HBB walls: .. W W W F -> .. U U W F.
-        where = (filters.convolve(wet_map, neighbors, mode='constant', cval=0) == 0)
-        self._type_map_base[where & np.logical_not(wet_map.astype(np.bool))] = nt._NTUnused.id
+        mask = (filters.convolve(wet_map, neighbors, mode='constant', cval=0) == 0)
+        self._type_map_base[mask & np.logical_not(wet_map.astype(np.bool))] = nt._NTUnused.id
 
         # If an unused node touches a wet node, mark it as propagation only.
         # For instance, for HBB walls: .. U U W F -> .. U P W F.
         used_map = (self._type_map_base != nt._NTUnused.id).astype(np.uint8)
-        where = (filters.convolve(used_map, neighbors, mode='constant', cval=0) > 0)
-        self._type_map_base[where & (self._type_map_base == nt._NTUnused.id)] = nt._NTPropagationOnly.id
+        mask = (filters.convolve(used_map, neighbors, mode='constant', cval=0) > 0)
+        self._type_map_base[mask & (self._type_map_base == nt._NTUnused.id)] = nt._NTPropagationOnly.id
 
 
 class Subdomain2D(Subdomain):
