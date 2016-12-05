@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """2D lid-driven cavity."""
 
-import math
-import numpy as np
 from sailfish.subdomain import Subdomain2D
 from sailfish.node_type import NTFullBBWall, NTRegularizedVelocity
 from sailfish.controller import LBSimulationController
