@@ -28,6 +28,7 @@ ${kernel} void ShanChenPrepareMacroFields(
   ${scratch_space_if_required()}
   ${iteration_number_if_required()})
 {
+  ${cond(barrier_needs_all_threads, 'bool alive = true;')}
   ${local_indices_split()}
   ${indirect_index()}
   ${load_node_type()}
@@ -99,6 +100,7 @@ ${kernel} void ShanChenCollideAndPropagate${grid_idx}(
   ${scratch_space_if_required()}
   ${iteration_number_if_required()})
 {
+  ${cond(barrier_needs_all_threads, 'bool alive = true;')}
   ${local_indices_split()}
   ${indirect_index()}
   ${shared_mem_propagation_vars()}
